@@ -1,0 +1,2 @@
+# CAAI-BDSC2023_Task2_LinkPred_DisMultGES
+CAAI-BDSC2023_Task2 社交图谱动态链接预测
