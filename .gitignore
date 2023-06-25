@@ -1,0 +1,14 @@
+# cache
+__pycache__
+*.pkl
+
+# model
+*.pt
+
+# log
+*.txt
+
+# data
+*.csv
+*.json
+*.jsonl
