@@ -16,32 +16,44 @@
 ### 模型
 - 评价指标: Mean Reciprocal Rank(MRR)
 - 模型选型(线下验证)
-  - 提交训练集中分享次数最多的五个用户: 0.09
-  - GCN + RandomInit Features：0.03
-  - GCN + Entity Emebedding + 去线性层和ReLU: 0.10
-  - TransE: 0.14
-  - SimpLE/Dismult: 0.18——最终选型Dismult
-  - CompGCN——算力不支持, 放弃
-  - Node2Vec、DeepWalk等GE模型线下分数很差
-  - Two Tower等召回模型线下表现很差
-  
+
+|Model|MRR|
+|:-:|:-:|
+|GCN(特征随机生成)|0.03|
+|GCN(实体嵌入)|0.08|
+|GCN(实体嵌入, 去ReLU和Linear)|0.10|
+|训练集分享次数最多top5|0.09|
+|TransE|0.14|
+|SimpLE|0.18|
+|DisMult|0.18|
+
+```
+- CompGCN由于算力不支持, 放弃
+- Node2Vec、DeepWalk等GE模型线下分数很差,
+- MF召回模型线下表现很差
+```
 - 模型优化
 
-模型优化主要考虑的是边和节点以及边类型的个数基本处于同一个量级时怎么处理。结合LightGCN的论文以及实验得出的结论是尽量取消线性层和激活函数, 让梯度可以直接反传到Embedding Table上。实际上我的观点是当输入是Embedding时只需要聚合函数, 不需要任何多余操作。
+1. 节点和边id数量处于一个量级
+2. 时间怎么处理
+3. 用户和物品特征怎么融合
 
-  - Relation Attribute: 利用**EGES**[1]中方法融合边特征, 测试发现EGES的融合方法效果较差, GES的SumPooling较好, 线下MRR提升0.04
-  - 头节点替换概率提高, 尾节点替换概率下降, 少量提分
-  - Margin Ranking Loss 代替 LogLoss, 少量提分
-  - Validation as Input, 测试集上MRR提升0.05左右
-  - 20个Dismult+GES进行超参扰动后排序平均融合, 线上提升0.02左右
+|提升方法|MRR|
+|:-:|:-:|
+|关系特征GES[1]|⬆ 0.04|
+|用户特征GES|⬇⬇⬇|
+|验证集加入训练|⬆ 0.05|
+|Ranking Average Ensemble|⬆ 0.02|
+|负采样时提高头节点替换概率|⬆0.00x|
+|Margin Ranking Loss|⬆0.00x|
+|时间加权损失函数|-|
 
-## 总结
-
-- 这场比赛和我看到的过去的知识图谱的内容不太一样, 原因是这场比赛几乎是一个纯粹的GraphEmbedding的任务。
-- 第一次接触KGE模型的比赛, 这场比赛我几乎没有时间和算力去做, Base很早就搭好了, 到了最后两周才有空去学DGL, 不过最后也因为算力不充足放弃了。知识图谱内部也许有些我不了解的Trick, 希望后续有机会学习一下。
-
-- 在GNN模型搭建里, 最初我认为PyG好用, DGL的文档等很不直观, 但是一旦涉及到自定义MessagePassing时DGL使用起来很方便。
-
+- 遇到的问题
+```
+1. 时间特征没有用上，基本没有时间去探索更复杂的用户与时间特征的做法
+2. EGES的效果相比GES要更差，也许是因为该数据集上线性层参数也比较难学习——使用Embedding作为输入时，线性层意义不大
+3. u2x等召回基本方法可以尝试使用，但是没有时间深入挖掘
+```
 
 
 [1] [Billion-scale Commodity Embedding for E-commerce Recommendation in Alibaba](https://arxiv.org/pdf/1803.02349.pdf)
